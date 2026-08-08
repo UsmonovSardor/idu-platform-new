@@ -1,0 +1,752 @@
+// ─────────────────────────────────────────────────────────────────────────
+// IDU Platform v2 — Prisma schema (single source of truth, R6)
+// Domen DB'da sozlanadi (R7). Har jadvalda soft-delete + audit (R8, §11).
+// ─────────────────────────────────────────────────────────────────────────
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Enums ─────────────────────────────────────────────────────────────────
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING
+}
+
+enum StudentStatus {
+  STUDYING
+  ACADEMIC_LEAVE
+  EXPELLED
+  GRADUATED
+  TRANSFERRED
+}
+
+enum Degree {
+  BACHELOR
+  MASTER
+  PHD
+}
+
+enum SemesterSeason {
+  FALL
+  SPRING
+  SUMMER
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+enum ExamType {
+  QUIZ
+  MIDTERM
+  FINAL
+  PRACTICE
+}
+
+enum QuestionType {
+  SINGLE
+  MULTIPLE
+  OPEN
+  TRUE_FALSE
+}
+
+enum AdmissionStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  ACCEPTED
+  REJECTED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  PARTIAL
+  FAILED
+  REFUNDED
+}
+
+enum PaymentGateway {
+  PAYME
+  CLICK
+  CASH
+  BANK
+}
+
+enum DocumentType {
+  REFERENCE
+  TRANSCRIPT
+  CERTIFICATE
+  ORDER
+}
+
+enum NotificationChannel {
+  IN_APP
+  PUSH
+  TELEGRAM
+  EMAIL
+  SMS
+}
+
+// ── RBAC (§6, R21) ──────────────────────────────────────────────────────────
+
+model Role {
+  id          String           @id @default(uuid())
+  name        String           @unique // STUDENT, TEACHER, ...
+  label       String
+  description String?
+  isSystem    Boolean          @default(false) // tizim rollari o'chirilmaydi
+  permissions RolePermission[]
+  users       User[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("roles")
+}
+
+model Permission {
+  id      String           @id @default(uuid())
+  action  String // manage | create | read | update | delete
+  subject String // User | Grade | ...
+  roles   RolePermission[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([action, subject])
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// ── Users & Auth (§7.1) ─────────────────────────────────────────────────────
+
+model User {
+  id           String     @id @default(uuid())
+  fullName     String
+  login        String     @unique
+  email        String?    @unique
+  phone        String?    @unique
+  passwordHash String
+  roleId       String
+  role         Role       @relation(fields: [roleId], references: [id])
+  status       UserStatus @default(PENDING)
+
+  telegramId       String? @unique
+  avatarUrl        String?
+  bio              String?
+  locale           String  @default("uz")
+  theme            String  @default("system")
+  emailVerified    Boolean @default(false)
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
+
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+  lastLoginAt         DateTime?
+
+  student       Student?
+  teacher       Teacher?
+  refreshTokens RefreshToken[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+  sentMessages  Message[]      @relation("MessageSender")
+  announcements Announcement[]
+  forumPosts    ForumPost[]
+  forumTopics   ForumTopic[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?
+
+  @@index([roleId])
+  @@index([status])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  userAgent String?
+  ip        String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+// ── Academic structure (§7.2, R7) ───────────────────────────────────────────
+
+model Faculty {
+  id          String       @id @default(uuid())
+  name        String
+  code        String       @unique
+  departments Department[]
+  programs    Program[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?
+
+  @@map("faculties")
+}
+
+model Department {
+  id        String    @id @default(uuid())
+  name      String
+  facultyId String
+  faculty   Faculty   @relation(fields: [facultyId], references: [id])
+  teachers  Teacher[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?
+
+  @@index([facultyId])
+  @@map("departments")
+}
+
+model Program {
+  id        String  @id @default(uuid())
+  name      String
+  facultyId String
+  faculty   Faculty @relation(fields: [facultyId], references: [id])
+  degree    Degree  @default(BACHELOR)
+  groups    Group[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?
+
+  @@index([facultyId])
+  @@map("programs")
+}
+
+model Group {
+  id        String    @id @default(uuid())
+  name      String
+  programId String
+  program   Program   @relation(fields: [programId], references: [id])
+  year      Int
+  curatorId String?
+  students  Student[]
+  schedules Schedule[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?
+
+  @@index([programId])
+  @@map("groups")
+}
+
+model Semester {
+  id           String         @id @default(uuid())
+  academicYear String // "2025-2026"
+  season       SemesterSeason
+  startDate    DateTime
+  endDate      DateTime
+  isActive     Boolean        @default(false)
+  courses      Course[]
+  grades       Grade[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@unique([academicYear, season])
+  @@map("semesters")
+}
+
+model Teacher {
+  id           String      @id @default(uuid())
+  userId       String      @unique
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  title        String? // dotsent, professor, ...
+  courses      Course[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([departmentId])
+  @@map("teachers")
+}
+
+model Student {
+  id            String        @id @default(uuid())
+  userId        String        @unique
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  groupId       String?
+  group         Group?        @relation(fields: [groupId], references: [id])
+  studentNumber String        @unique
+  gpa           Float         @default(0)
+  status        StudentStatus @default(STUDYING)
+
+  grades      Grade[]
+  attendance  Attendance[]
+  submissions Submission[]
+  attempts    ExamAttempt[]
+  payments    Payment[]
+  documents   Document[]
+  enrollments Enrollment[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([groupId])
+  @@index([status])
+  @@map("students")
+}
+
+model Course {
+  id         String    @id @default(uuid())
+  name       String
+  code       String
+  credits    Int       @default(3)
+  teacherId  String?
+  teacher    Teacher?  @relation(fields: [teacherId], references: [id])
+  semesterId String?
+  semester   Semester? @relation(fields: [semesterId], references: [id])
+
+  grades      Grade[]
+  schedules   Schedule[]
+  attendance  Attendance[]
+  exams       Exam[]
+  assignments Assignment[]
+  enrollments Enrollment[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?
+
+  @@index([teacherId])
+  @@index([semesterId])
+  @@map("courses")
+}
+
+model Enrollment {
+  id        String  @id @default(uuid())
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  courseId  String
+  course    Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([studentId, courseId])
+  @@map("enrollments")
+}
+
+// ── Grading (§7.3) ──────────────────────────────────────────────────────────
+
+model Grade {
+  id         String   @id @default(uuid())
+  studentId  String
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  courseId   String
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  semesterId String?
+  semester   Semester? @relation(fields: [semesterId], references: [id])
+
+  jn     Float @default(0) // Joriy nazorat (0–30)
+  on     Float @default(0) // Oraliq nazorat (0–20)
+  yn     Float @default(0) // Yakuniy nazorat (0–30)
+  mi     Float @default(0) // Mustaqil ish (0–20)
+  total  Float @default(0)
+  letter String?
+  gpa    Float @default(0)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String? // baho kim tomonidan (audit, R23)
+
+  @@unique([studentId, courseId])
+  @@index([courseId])
+  @@map("grades")
+}
+
+// ── Schedule (§7.4) ─────────────────────────────────────────────────────────
+
+model Schedule {
+  id        String @id @default(uuid())
+  courseId  String
+  course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  groupId   String
+  group     Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  weekday   Int // 1=Dushanba ... 7=Yakshanba
+  startTime String // "09:00"
+  endTime   String // "10:20"
+  room      String
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([groupId])
+  @@index([courseId])
+  @@map("schedules")
+}
+
+// ── Attendance (§7.5) ───────────────────────────────────────────────────────
+
+model Attendance {
+  id        String           @id @default(uuid())
+  studentId String
+  student   Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  courseId  String
+  course    Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  date      DateTime
+  status    AttendanceStatus @default(ABSENT)
+  note      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+
+  @@unique([studentId, courseId, date])
+  @@index([courseId, date])
+  @@map("attendance")
+}
+
+// ── Exams (§7.6, R25) ───────────────────────────────────────────────────────
+
+model Exam {
+  id           String        @id @default(uuid())
+  courseId     String
+  course       Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title        String
+  type         ExamType      @default(QUIZ)
+  timeLimitMin Int           @default(30)
+  maxAttempts  Int           @default(1)
+  shuffle      Boolean       @default(true)
+  proctoring   Boolean       @default(false)
+  opensAt      DateTime?
+  closesAt     DateTime?
+  questions    Question[]
+  attempts     ExamAttempt[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?
+
+  @@index([courseId])
+  @@map("exams")
+}
+
+model Question {
+  id       String       @id @default(uuid())
+  examId   String?
+  exam     Exam?        @relation(fields: [examId], references: [id], onDelete: Cascade)
+  courseId String? // savollar banki
+  type     QuestionType @default(SINGLE)
+  text     String
+  options  Json? // [{ id, text, correct }]
+  points   Float        @default(1)
+  answers  Answer[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([examId])
+  @@map("questions")
+}
+
+model ExamAttempt {
+  id          String    @id @default(uuid())
+  examId      String
+  exam        Exam      @relation(fields: [examId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  startedAt   DateTime  @default(now())
+  submittedAt DateTime?
+  score       Float?
+  autoClosed  Boolean   @default(false) // tab almashtirish/vaqt tugashi (R25)
+  answers     Answer[]
+
+  @@index([examId])
+  @@index([studentId])
+  @@map("exam_attempts")
+}
+
+model Answer {
+  id         String      @id @default(uuid())
+  attemptId  String
+  attempt    ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  value      Json
+  score      Float?
+
+  @@unique([attemptId, questionId])
+  @@map("answers")
+}
+
+// ── Assignments (§7.7) ──────────────────────────────────────────────────────
+
+model Assignment {
+  id          String       @id @default(uuid())
+  courseId    String
+  course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  deadline    DateTime
+  maxScore    Float        @default(100)
+  submissions Submission[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?
+
+  @@index([courseId])
+  @@map("assignments")
+}
+
+model Submission {
+  id           String     @id @default(uuid())
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  fileUrl      String?
+  comment      String?
+  grade        Float?
+  feedback     String?
+  isLate       Boolean    @default(false)
+  submittedAt  DateTime   @default(now())
+
+  @@unique([assignmentId, studentId])
+  @@map("submissions")
+}
+
+// ── Admissions (§7.8) ───────────────────────────────────────────────────────
+
+model Admission {
+  id          String          @id @default(uuid())
+  fullName    String
+  email       String
+  phone       String
+  programId   String?
+  status      AdmissionStatus @default(SUBMITTED)
+  documents   Json? // yuklangan hujjatlar ro'yxati
+  reviewNote  String?
+  convertedTo String? // yaratilgan User id (qabul qilinganda)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([status])
+  @@map("admissions")
+}
+
+// ── Payments (§7.9, R38) ────────────────────────────────────────────────────
+
+model Payment {
+  id             String         @id @default(uuid())
+  studentId      String
+  student        Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  amount         Decimal        @db.Decimal(12, 2)
+  paidAmount     Decimal        @default(0) @db.Decimal(12, 2)
+  status         PaymentStatus  @default(PENDING)
+  gateway        PaymentGateway @default(PAYME)
+  transactionId  String?        @unique
+  idempotencyKey String?        @unique
+  receiptUrl     String?
+  dueDate        DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([studentId])
+  @@index([status])
+  @@map("payments")
+}
+
+// ── Documents (§7.10) ───────────────────────────────────────────────────────
+
+model Document {
+  id        String       @id @default(uuid())
+  type      DocumentType
+  studentId String?
+  student   Student?     @relation(fields: [studentId], references: [id])
+  fileUrl   String
+  qrHash    String       @unique // QR verifikatsiya (§7.10)
+  meta      Json?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?
+
+  @@index([studentId])
+  @@map("documents")
+}
+
+// ── Communication (§7.11) ───────────────────────────────────────────────────
+
+model Announcement {
+  id       String  @id @default(uuid())
+  title    String
+  body     String
+  scope    String // UNIVERSITY | FACULTY:<id> | GROUP:<id>
+  authorId String
+  author   User    @relation(fields: [authorId], references: [id])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([scope])
+  @@map("announcements")
+}
+
+model ChatRoom {
+  id        String    @id @default(uuid())
+  name      String?
+  isGroup   Boolean   @default(false)
+  messages  Message[]
+  createdAt DateTime  @default(now())
+
+  @@map("chat_rooms")
+}
+
+model Message {
+  id        String    @id @default(uuid())
+  roomId    String
+  room      ChatRoom  @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User      @relation("MessageSender", fields: [senderId], references: [id])
+  body      String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  @@index([roomId])
+  @@map("messages")
+}
+
+model ForumTopic {
+  id       String      @id @default(uuid())
+  title    String
+  body     String
+  authorId String
+  author   User        @relation(fields: [authorId], references: [id])
+  posts    ForumPost[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@map("forum_topics")
+}
+
+model ForumPost {
+  id       String     @id @default(uuid())
+  topicId  String
+  topic    ForumTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  authorId String
+  author   User       @relation(fields: [authorId], references: [id])
+  body     String
+  votes    Int        @default(0)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([topicId])
+  @@map("forum_posts")
+}
+
+// ── Notifications (§7.12) ───────────────────────────────────────────────────
+
+model Notification {
+  id      String              @id @default(uuid())
+  userId  String
+  user    User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channel NotificationChannel @default(IN_APP)
+  title   String
+  body    String
+  payload Json?
+  readAt  DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, readAt])
+  @@map("notifications")
+}
+
+// ── Audit & Settings (§13, R23, R30) ────────────────────────────────────────
+
+model AuditLog {
+  id     String  @id @default(uuid())
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+  action String
+  entity String
+  before Json?
+  after  Json?
+  ip     String?
+
+  createdAt DateTime @default(now())
+
+  @@index([entity])
+  @@index([userId])
+  @@map("audit_logs")
+}
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
+
+model FeatureFlag {
+  key         String   @id
+  enabled     Boolean  @default(false)
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  @@map("feature_flags")
+}

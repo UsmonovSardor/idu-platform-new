@@ -1,0 +1,75 @@
+# Local development infrastructure (dev = prod parity, R26)
+# Usage: docker compose up -d
+name: idu-platform
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: idu-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-idu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-idu_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-idu_platform}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-idu} -d ${POSTGRES_DB:-idu_platform}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: idu-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: idu-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-idu_minio}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-idu_minio_password}
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # One-shot: creates the default bucket on startup
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${S3_ACCESS_KEY:-idu_minio} ${S3_SECRET_KEY:-idu_minio_password};
+      mc mb --ignore-existing local/${S3_BUCKET:-idu-uploads};
+      mc anonymous set download local/${S3_BUCKET:-idu-uploads}/public;
+      exit 0;
+      "
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
