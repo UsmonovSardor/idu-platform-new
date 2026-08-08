@@ -54,6 +54,7 @@ const ROLE_POLICIES: Record<Role, Array<{ action: Action; subject: Subject }>> =
     { action: 'manage', subject: 'Attendance' },
     { action: 'manage', subject: 'Exam' },
     { action: 'manage', subject: 'Assignment' },
+    { action: 'read', subject: 'Course' },
     { action: 'read', subject: 'Schedule' },
     { action: 'read', subject: 'Student' },
   ],
@@ -142,10 +143,14 @@ async function seedDemo() {
     create: { name: 'Axborot texnologiyalari', code: 'ICT' },
     update: {},
   });
-  const program = await prisma.program.create({
-    data: { name: 'Kompyuter injiniringi', facultyId: faculty.id, degree: 'BACHELOR' },
-  });
-  await prisma.group.create({ data: { name: 'CS-21', programId: program.id, year: 2 } });
+  const program =
+    (await prisma.program.findFirst({ where: { name: 'Kompyuter injiniringi', facultyId: faculty.id } })) ??
+    (await prisma.program.create({
+      data: { name: 'Kompyuter injiniringi', facultyId: faculty.id, degree: 'BACHELOR' },
+    }));
+  const group =
+    (await prisma.group.findFirst({ where: { name: 'CS-21', programId: program.id } })) ??
+    (await prisma.group.create({ data: { name: 'CS-21', programId: program.id, year: 2 } }));
 
   // Demo o'qituvchi
   const teacherRole = await prisma.role.findUniqueOrThrow({ where: { name: 'TEACHER' } });
@@ -179,11 +184,77 @@ async function seedDemo() {
     },
     update: {},
   });
-  await prisma.student.upsert({
+  const student = await prisma.student.upsert({
     where: { userId: studentUser.id },
-    create: { userId: studentUser.id, studentNumber: '2021001', status: 'STUDYING' },
+    create: { userId: studentUser.id, groupId: group.id, studentNumber: '2021001', status: 'STUDYING' },
+    update: { groupId: group.id },
+  });
+
+  const teacher = await prisma.teacher.findUniqueOrThrow({ where: { userId: teacherUser.id } });
+
+  // Semester + fan + enrollment
+  const semester = await prisma.semester.upsert({
+    where: { academicYear_season: { academicYear: '2025-2026', season: 'FALL' } },
+    create: {
+      academicYear: '2025-2026',
+      season: 'FALL',
+      startDate: new Date('2025-09-01'),
+      endDate: new Date('2026-01-15'),
+      isActive: true,
+    },
+    update: { isActive: true },
+  });
+
+  const existingCourse = await prisma.course.findFirst({ where: { code: 'CS101' } });
+  const course =
+    existingCourse ??
+    (await prisma.course.create({
+      data: {
+        name: 'Dasturlash asoslari',
+        code: 'CS101',
+        credits: 6,
+        teacherId: teacher.id,
+        semesterId: semester.id,
+      },
+    }));
+
+  await prisma.enrollment.upsert({
+    where: { studentId_courseId: { studentId: student.id, courseId: course.id } },
+    create: { studentId: student.id, courseId: course.id },
     update: {},
   });
+
+  // Jadval (dushanba 09:00–10:20, xona 201)
+  const hasSchedule = await prisma.schedule.findFirst({ where: { courseId: course.id, groupId: group.id } });
+  if (!hasSchedule) {
+    await prisma.schedule.create({
+      data: {
+        courseId: course.id,
+        groupId: group.id,
+        weekday: 1,
+        startTime: '09:00',
+        endTime: '10:20',
+        room: '201',
+      },
+    });
+  }
+
+  // Topshiriq
+  const hasAssignment = await prisma.assignment.findFirst({ where: { courseId: course.id } });
+  if (!hasAssignment) {
+    await prisma.assignment.create({
+      data: {
+        courseId: course.id,
+        title: 'Laboratoriya 1 — massivlar',
+        description: 'Massiv ustida asosiy amallar',
+        deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        maxScore: 100,
+        createdBy: teacherUser.id,
+      },
+    });
+  }
+
+  console.log(`   Demo: course ${course.code}, student ${student.studentNumber} enrolled`);
 }
 
 async function main() {

@@ -4,15 +4,21 @@ import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { AcademicsModule } from './academics/academics.module';
+import { AssignmentsModule } from './assignments/assignments.module';
+import { AttendanceModule } from './attendance/attendance.module';
+import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { validateEnv } from './config/env.validation';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { GradesModule } from './grades/grades.module';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { PoliciesGuard } from './rbac/policies.guard';
 import { RbacModule } from './rbac/rbac.module';
+import { ScheduleModule } from './schedule/schedule.module';
+import { StudentsModule } from './students/students.module';
 
 @Module({
   imports: [
@@ -49,9 +55,15 @@ import { RbacModule } from './rbac/rbac.module';
     }),
     PrismaModule,
     RbacModule,
+    AuditModule,
     AuthModule,
     HealthModule,
     AcademicsModule,
+    StudentsModule,
+    GradesModule,
+    ScheduleModule,
+    AttendanceModule,
+    AssignmentsModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

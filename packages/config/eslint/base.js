@@ -19,10 +19,8 @@ module.exports = [
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/consistent-type-imports': [
-        'warn',
-        { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
-      ],
+      // consistent-type-imports QO'SHILMAYDI: NestJS/decorator DI type-only
+      // importlarda buziladi (emitDecoratorMetadata). Xavfsizlik uchun o'chirilgan.
       'no-console': ['warn', { allow: ['warn', 'error'] }],
     },
   },
