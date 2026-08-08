@@ -63,6 +63,7 @@ const ROLE_POLICIES: Record<Role, Array<{ action: Action; subject: Subject }>> =
     { action: 'read', subject: 'Schedule' },
     { action: 'read', subject: 'Attendance' },
     { action: 'create', subject: 'Submission' },
+    { action: 'read', subject: 'Exam' },
     { action: 'read', subject: 'Payment' },
     { action: 'read', subject: 'Document' },
     { action: 'read', subject: 'Announcement' },
@@ -252,6 +253,51 @@ async function seedDemo() {
         createdBy: teacherUser.id,
       },
     });
+  }
+
+  // Namunaviy imtihon + savollar
+  const hasExam = await prisma.exam.findFirst({ where: { courseId: course.id } });
+  if (!hasExam) {
+    const exam = await prisma.exam.create({
+      data: {
+        courseId: course.id,
+        title: 'Oraliq test — massivlar',
+        type: 'MIDTERM',
+        timeLimitMin: 20,
+        maxAttempts: 2,
+        shuffle: true,
+        proctoring: true,
+        createdBy: teacherUser.id,
+      },
+    });
+    await prisma.question.create({
+      data: {
+        examId: exam.id,
+        courseId: course.id,
+        type: 'SINGLE',
+        text: 'Massiv indeksi qaysi qiymatdan boshlanadi?',
+        points: 2,
+        options: [
+          { id: 'o1', text: '0', correct: true },
+          { id: 'o2', text: '1', correct: false },
+        ],
+      },
+    });
+    await prisma.question.create({
+      data: {
+        examId: exam.id,
+        courseId: course.id,
+        type: 'MULTIPLE',
+        text: "Quyidagilardan qaysilari chiziqli ma'lumot tuzilmasi?",
+        points: 3,
+        options: [
+          { id: 'a', text: 'Massiv', correct: true },
+          { id: 'b', text: 'Bog\'langan ro\'yxat', correct: true },
+          { id: 'c', text: 'Graf', correct: false },
+        ],
+      },
+    });
+    console.log(`   Demo exam: ${exam.title} (2 savol)`);
   }
 
   console.log(`   Demo: course ${course.code}, student ${student.studentNumber} enrolled`);

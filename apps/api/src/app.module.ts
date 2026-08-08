@@ -8,6 +8,7 @@ import { AssignmentsModule } from './assignments/assignments.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
+import { ExamsModule } from './exams/exams.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
 import { validateEnv } from './config/env.validation';
@@ -64,6 +65,7 @@ import { StudentsModule } from './students/students.module';
     ScheduleModule,
     AttendanceModule,
     AssignmentsModule,
+    ExamsModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
