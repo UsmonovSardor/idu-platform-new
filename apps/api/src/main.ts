@@ -56,8 +56,9 @@ async function bootstrap(): Promise<void> {
     });
   }
 
-  const port = config.get<number>('API_PORT', 4000);
-  await app.listen(port);
+  // Railway/Heroku dinamik PORT beradi; aks holda API_PORT. 0.0.0.0 — konteyner tashqarisidan yetish uchun.
+  const port = Number(process.env.PORT) || config.get<number>('API_PORT', 4000);
+  await app.listen(port, '0.0.0.0');
   // eslint-disable-next-line no-console
   console.log(`🚀 API: http://localhost:${port}/${prefix}  |  Docs: http://localhost:${port}/api/docs`);
 }
