@@ -23,12 +23,13 @@ RUN pnpm --filter @idu/api db:generate \
 # ── Runtime ──
 FROM base AS runtime
 ENV NODE_ENV=production
+# pnpm workspace: ildiz .pnpm do'koni + apps/api symlinklari — resolution uchun ikkalasi ham kerak
 COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=build /app/apps/api/dist ./apps/api/dist
-COPY --from=build /app/apps/api/node_modules/.prisma ./apps/api/node_modules/.prisma
 COPY --from=build /app/apps/api/package.json ./apps/api/
 COPY --from=build /app/apps/api/prisma ./apps/api/prisma
 WORKDIR /app/apps/api
 EXPOSE 4000
 # Har deploy'da migratsiyalarni qo'llaymiz (idempotent, Prisma advisory-lock) so'ng ilova
-CMD ["sh", "-c", "../../node_modules/.bin/prisma migrate deploy && node dist/main.js"]
+CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node dist/main.js"]
