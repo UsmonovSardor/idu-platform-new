@@ -26,6 +26,8 @@ ENV NODE_ENV=production
 # pnpm workspace: ildiz .pnpm do'koni + apps/api symlinklari — resolution uchun ikkalasi ham kerak
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/apps/api/node_modules ./apps/api/node_modules
+# @idu/* workspace paketlari node_modules'da symlink — dist bilan birga ildizga kerak
+COPY --from=build /app/packages ./packages
 COPY --from=build /app/apps/api/dist ./apps/api/dist
 COPY --from=build /app/apps/api/package.json ./apps/api/
 COPY --from=build /app/apps/api/prisma ./apps/api/prisma
