@@ -76,3 +76,27 @@ body {
   border-radius: 9999px;
   border: 3px solid var(--bg);
 }
+
+/* Sanitize qilingan e'lon matni uchun minimal tipografiya */
+.prose-idu p {
+  margin: 0 0 0.5rem;
+}
+.prose-idu p:last-child {
+  margin-bottom: 0;
+}
+.prose-idu strong,
+.prose-idu b {
+  font-weight: 600;
+  color: var(--fg);
+}
+.prose-idu a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose-idu ul,
+.prose-idu ol {
+  margin: 0 0 0.5rem;
+  padding-left: 1.25rem;
+  list-style: revert;
+}

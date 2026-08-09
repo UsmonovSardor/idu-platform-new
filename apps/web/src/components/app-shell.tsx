@@ -13,6 +13,8 @@ import {
   Wallet,
   X,
 } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import type { Role } from '@idu/types';
 import { api } from '@/lib/api';
@@ -23,26 +25,26 @@ import { LocaleSwitcher } from './locale-switcher';
 import { Logo } from './logo';
 import { ThemeToggle } from './theme-toggle';
 
-type NavItem = { key: string; icon: React.ElementType };
+type NavItem = { key: string; href: string; icon: React.ElementType };
 
 const NAV_BY_ROLE = {
   STUDENT: [
-    { key: 'dashboard', icon: LayoutDashboard },
-    { key: 'grades', icon: BookOpen },
-    { key: 'schedule', icon: CalendarDays },
-    { key: 'payments', icon: Wallet },
-    { key: 'announcements', icon: Megaphone },
+    { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { key: 'grades', href: '/grades', icon: BookOpen },
+    { key: 'schedule', href: '/schedule', icon: CalendarDays },
+    { key: 'payments', href: '/payments', icon: Wallet },
+    { key: 'announcements', href: '/announcements', icon: Megaphone },
   ],
   TEACHER: [
-    { key: 'dashboard', icon: LayoutDashboard },
-    { key: 'grades', icon: BookOpen },
-    { key: 'schedule', icon: CalendarDays },
+    { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { key: 'grades', href: '/grades', icon: BookOpen },
+    { key: 'schedule', href: '/schedule', icon: CalendarDays },
   ],
   _admin: [
-    { key: 'dashboard', icon: LayoutDashboard },
-    { key: 'students', icon: Users },
-    { key: 'reports', icon: BarChart3 },
-    { key: 'announcements', icon: Megaphone },
+    { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { key: 'students', href: '/students', icon: Users },
+    { key: 'reports', href: '/reports', icon: BarChart3 },
+    { key: 'announcements', href: '/announcements', icon: Megaphone },
   ],
 } satisfies Record<string, NavItem[]>;
 
@@ -65,6 +67,7 @@ const ROLE_LABEL: Record<string, string> = {
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, clear } = useAuth();
   const { t } = useI18n();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
   const items = user ? navFor(user.role) : [];
@@ -85,20 +88,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Logo />
       </div>
       <nav className="mt-2 flex flex-col gap-1">
-        {items.map((item, i) => (
-          <a
-            key={item.key}
-            href="/dashboard"
-            onClick={() => setOpen(false)}
-            className={cn(
-              'group flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
-              i === 0 ? 'bg-primary/10 text-primary' : 'text-muted hover:bg-muted-bg hover:text-fg',
-            )}
-          >
-            <item.icon className="h-[18px] w-[18px]" />
-            {t(item.key)}
-          </a>
-        ))}
+        {items.map((item) => {
+          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          return (
+            <Link
+              key={item.key}
+              href={item.href}
+              onClick={() => setOpen(false)}
+              aria-current={active ? 'page' : undefined}
+              className={cn(
+                'group flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
+                active ? 'bg-primary/10 text-primary' : 'text-muted hover:bg-muted-bg hover:text-fg',
+              )}
+            >
+              <item.icon className="h-[18px] w-[18px]" />
+              {t(item.key)}
+            </Link>
+          );
+        })}
       </nav>
       <div className="mt-auto rounded-lg border border-border bg-bg/60 p-3">
         <div className="flex items-center gap-2 text-xs text-muted">
