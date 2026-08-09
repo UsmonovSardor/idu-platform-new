@@ -9,6 +9,7 @@ import {
   Megaphone,
   Menu,
   PenSquare,
+  QrCode,
   Trophy,
   Users,
   Wallet,
@@ -39,6 +40,7 @@ const NAV_BY_ROLE = {
   TEACHER: [
     { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
     { key: 'grade.entry', href: '/grade-entry', icon: PenSquare },
+    { key: 'attendance', href: '/attendance', icon: QrCode },
     { key: 'schedule', href: '/schedule', icon: CalendarDays },
   ],
   _admin: [

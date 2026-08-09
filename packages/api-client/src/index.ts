@@ -122,6 +122,17 @@ export class ApiClient {
     mine: () => this.request<TeacherCourse[]>('GET', '/courses/mine'),
   };
 
+  attendance = {
+    qrGenerate: (dto: { courseId: string; ttlSeconds?: number }) =>
+      this.request<QrSession>('POST', '/attendance/qr/generate', { body: dto }),
+    qrSubmit: (token: string) =>
+      this.request<{ success: boolean; status: string }>('POST', '/attendance/qr/submit', {
+        body: { token },
+      }),
+    courseStats: (courseId: string) =>
+      this.request<AttendanceStats>('GET', `/attendance/course/${courseId}/stats`),
+  };
+
   gamification = {
     me: () => this.request<GameProfile>('GET', '/gamification/me'),
     leaderboard: (limit = 20) =>
@@ -191,6 +202,14 @@ export interface GradeRoster {
 export interface BulkGradeInput {
   courseId: string;
   grades: Array<{ studentId: string; jn: number; on: number; yn: number; mi: number }>;
+}
+export interface QrSession {
+  token: string;
+  expiresAt: string;
+}
+export interface AttendanceStats {
+  total: number;
+  byStatus: Partial<Record<'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED', number>>;
 }
 export interface GameProfile {
   xp: number;
