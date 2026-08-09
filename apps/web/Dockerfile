@@ -16,9 +16,10 @@ RUN pnpm install --frozen-lockfile
 
 # ── Build ──
 FROM deps AS build
-# NEXT_PUBLIC_* build vaqtida inline bo'ladi — API domenini bu yerda uzatamiz
-ARG NEXT_PUBLIC_API_URL
-ARG NEXT_PUBLIC_WS_URL
+# NEXT_PUBLIC_* build vaqtida inline bo'ladi. Railway service-variablelarni avtomatik
+# build-arg qilib bermaydi, shuning uchun prod API domenini default sifatida qat'iy beramiz.
+ARG NEXT_PUBLIC_API_URL=https://api-production-5735.up.railway.app/api/v1
+ARG NEXT_PUBLIC_WS_URL=https://api-production-5735.up.railway.app
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
 ENV NEXT_TELEMETRY_DISABLED=1
