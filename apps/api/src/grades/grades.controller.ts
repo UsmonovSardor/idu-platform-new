@@ -54,6 +54,13 @@ export class GradesController {
     return this.grades.debtors(courseId);
   }
 
+  @Get('course/:courseId/roster')
+  @CheckPolicies({ action: 'read', subject: 'Grade' })
+  @ApiOperation({ summary: "Fan baholash reyestri — talabalar + mavjud baholar (o'qituvchi)" })
+  roster(@Param('courseId') courseId: string) {
+    return this.grades.rosterForCourse(courseId);
+  }
+
   @Get('student/:studentId')
   @CheckPolicies({ action: 'read', subject: 'Grade' })
   @ApiOperation({ summary: "Talaba baholari (o'qituvchi/dekanat)" })

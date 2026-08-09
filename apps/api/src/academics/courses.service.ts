@@ -29,6 +29,17 @@ export class CoursesService {
     return paginate(data, total, query.page, query.limit);
   }
 
+  /** Joriy o'qituvchining o'z fanlari (baho kiritish uchun). */
+  async findMineByTeacher(userId: string) {
+    const teacher = await this.prisma.teacher.findUnique({ where: { userId }, select: { id: true } });
+    if (!teacher) return [];
+    return this.prisma.course.findMany({
+      where: { teacherId: teacher.id, deletedAt: null },
+      select: { id: true, name: true, code: true, credits: true },
+      orderBy: { name: 'asc' },
+    });
+  }
+
   async findOne(id: string) {
     const course = await this.prisma.course.findFirst({ where: { id, deletedAt: null } });
     if (!course) throw new NotFoundException('Fan topilmadi');

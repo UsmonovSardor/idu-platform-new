@@ -8,6 +8,7 @@ import {
   LogOut,
   Megaphone,
   Menu,
+  PenSquare,
   Trophy,
   Users,
   Wallet,
@@ -37,7 +38,7 @@ const NAV_BY_ROLE = {
   ],
   TEACHER: [
     { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { key: 'grades', href: '/grades', icon: BookOpen },
+    { key: 'grade.entry', href: '/grade-entry', icon: PenSquare },
     { key: 'schedule', href: '/schedule', icon: CalendarDays },
   ],
   _admin: [

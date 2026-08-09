@@ -1,4 +1,4 @@
-import type { AuthTokens, Paginated, Role } from '@idu/types';
+import type { Paginated, Role } from '@idu/types';
 
 export class ApiError extends Error {
   constructor(
@@ -107,11 +107,19 @@ export class ApiClient {
   grades = {
     mine: () => this.request<GradesResult>('GET', '/grades/me'),
     forStudent: (id: string) => this.request<GradesResult>('GET', `/grades/student/${id}`),
+    roster: (courseId: string) =>
+      this.request<GradeRoster>('GET', `/grades/course/${courseId}/roster`),
+    bulk: (dto: BulkGradeInput) =>
+      this.request<{ count: number }>('POST', '/grades/bulk', { body: dto }),
   };
 
   schedule = {
     mine: () => this.request<WeeklySchedule>('GET', '/schedule/me'),
     byGroup: (groupId: string) => this.request<WeeklySchedule>('GET', `/schedule/group/${groupId}`),
+  };
+
+  courses = {
+    mine: () => this.request<TeacherCourse[]>('GET', '/courses/mine'),
   };
 
   gamification = {
@@ -159,6 +167,31 @@ export interface GradesResult {
   }>;
 }
 export type WeeklySchedule = Record<string, Array<Record<string, unknown>>>;
+export interface TeacherCourse {
+  id: string;
+  name: string;
+  code: string;
+  credits: number;
+}
+export interface RosterStudent {
+  studentId: string;
+  studentNumber: string;
+  fullName: string;
+  jn: number | null;
+  on: number | null;
+  yn: number | null;
+  mi: number | null;
+  total: number | null;
+  letter: string | null;
+}
+export interface GradeRoster {
+  course: TeacherCourse;
+  students: RosterStudent[];
+}
+export interface BulkGradeInput {
+  courseId: string;
+  grades: Array<{ studentId: string; jn: number; on: number; yn: number; mi: number }>;
+}
 export interface GameProfile {
   xp: number;
   level: number;

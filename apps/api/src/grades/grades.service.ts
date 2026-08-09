@@ -101,6 +101,51 @@ export class GradesService {
     return gpa;
   }
 
+  /** Fan bo'yicha baholash reyestri — yozilgan talabalar + mavjud baho komponentlari (o'qituvchi). */
+  async rosterForCourse(courseId: string) {
+    const course = await this.prisma.course.findFirst({
+      where: { id: courseId, deletedAt: null },
+      select: { id: true, name: true, code: true, credits: true },
+    });
+    if (!course) throw new NotFoundException('Fan topilmadi');
+
+    const [enrollments, grades] = await Promise.all([
+      this.prisma.enrollment.findMany({
+        where: { courseId, student: { deletedAt: null } },
+        select: {
+          student: {
+            select: { id: true, studentNumber: true, user: { select: { fullName: true } } },
+          },
+        },
+      }),
+      this.prisma.grade.findMany({
+        where: { courseId, deletedAt: null },
+        select: { studentId: true, jn: true, on: true, yn: true, mi: true, total: true, letter: true },
+      }),
+    ]);
+
+    const gradeByStudent = new Map(grades.map((g) => [g.studentId, g]));
+    const students = enrollments
+      .map((e) => e.student)
+      .sort((a, b) => a.studentNumber.localeCompare(b.studentNumber))
+      .map((s) => {
+        const g = gradeByStudent.get(s.id) ?? null;
+        return {
+          studentId: s.id,
+          studentNumber: s.studentNumber,
+          fullName: s.user.fullName,
+          jn: g?.jn ?? null,
+          on: g?.on ?? null,
+          yn: g?.yn ?? null,
+          mi: g?.mi ?? null,
+          total: g?.total ?? null,
+          letter: g?.letter ?? null,
+        };
+      });
+
+    return { course, students };
+  }
+
   async findForStudent(studentId: string) {
     const student = await this.prisma.student.findFirst({
       where: { id: studentId, deletedAt: null },

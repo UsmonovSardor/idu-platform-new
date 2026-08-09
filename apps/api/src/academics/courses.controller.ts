@@ -22,6 +22,13 @@ export class CoursesController {
     return this.courses.findAll(query);
   }
 
+  @Get('mine')
+  @CheckPolicies({ action: 'read', subject: 'Course' })
+  @ApiOperation({ summary: "Mening fanlarim (o'qituvchi)" })
+  mine(@CurrentUser('id') userId: string) {
+    return this.courses.findMineByTeacher(userId);
+  }
+
   @Get(':id')
   @CheckPolicies({ action: 'read', subject: 'Course' })
   findOne(@Param('id') id: string) {
