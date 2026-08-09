@@ -56,3 +56,6 @@ apps/mobile/android/
 
 # CI workflow (needs PAT workflow scope to push; see docs/ci.yml.example)
 .github/workflows/
+
+# Claude Code local
+.claude/

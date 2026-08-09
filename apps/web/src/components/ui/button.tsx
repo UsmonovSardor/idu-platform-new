@@ -1,0 +1,35 @@
+import { cva, type VariantProps } from 'class-variance-authority';
+import { forwardRef } from 'react';
+import { cn } from '@/lib/cn';
+
+const button = cva(
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]',
+  {
+    variants: {
+      variant: {
+        primary: 'bg-primary text-primary-fg shadow-soft hover:brightness-110 hover:shadow-card',
+        outline: 'border border-border bg-card text-fg hover:bg-muted-bg',
+        ghost: 'text-fg hover:bg-muted-bg',
+        danger: 'bg-danger text-white hover:brightness-110',
+      },
+      size: {
+        sm: 'h-8 px-3',
+        md: 'h-10 px-4',
+        lg: 'h-11 px-6 text-base',
+        icon: 'h-9 w-9',
+      },
+    },
+    defaultVariants: { variant: 'primary', size: 'md' },
+  },
+);
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof button> {}
+
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, ...props }, ref) => (
+    <button ref={ref} className={cn(button({ variant, size }), className)} {...props} />
+  ),
+);
+Button.displayName = 'Button';

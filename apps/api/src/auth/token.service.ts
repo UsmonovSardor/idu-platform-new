@@ -51,7 +51,8 @@ export class TokenService {
   }
 
   /** Refresh tokenni tekshiradi va rotatsiya qiladi (eskisini bekor qiladi). */
-  async rotate(refreshToken: string, ctx?: { userAgent?: string; ip?: string }): Promise<AuthTokens | null> {
+  async rotate(refreshToken: string | undefined, ctx?: { userAgent?: string; ip?: string }): Promise<AuthTokens | null> {
+    if (!refreshToken) return null; // cookie yo'q → 401 (500 emas)
     const tokenHash = this.sha256(refreshToken);
     const record = await this.prisma.refreshToken.findUnique({
       where: { tokenHash },
