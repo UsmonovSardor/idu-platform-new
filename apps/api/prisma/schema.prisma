@@ -641,13 +641,25 @@ model Announcement {
 }
 
 model ChatRoom {
-  id        String    @id @default(uuid())
+  id        String       @id @default(uuid())
   name      String?
-  isGroup   Boolean   @default(false)
+  isGroup   Boolean      @default(false)
   messages  Message[]
-  createdAt DateTime  @default(now())
+  members   ChatMember[]
+  createdAt DateTime     @default(now())
 
   @@map("chat_rooms")
+}
+
+model ChatMember {
+  roomId   String
+  room     ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  userId   String
+  joinedAt DateTime @default(now())
+
+  @@id([roomId, userId])
+  @@index([userId])
+  @@map("chat_members")
 }
 
 model Message {

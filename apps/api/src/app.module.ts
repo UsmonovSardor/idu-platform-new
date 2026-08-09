@@ -1,3 +1,4 @@
+import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
@@ -5,13 +6,18 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { AcademicsModule } from './academics/academics.module';
 import { AdmissionsModule } from './admissions/admissions.module';
+import { AnnouncementsModule } from './announcements/announcements.module';
 import { AssignmentsModule } from './assignments/assignments.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { AuditModule } from './audit/audit.module';
+import { ChatModule } from './chat/chat.module';
 import { DocumentsModule } from './documents/documents.module';
+import { ForumModule } from './forum/forum.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { PaymentsModule } from './payments/payments.module';
 import { ReportsModule } from './reports/reports.module';
 import { StorageModule } from './storage/storage.module';
+import { TelegramModule } from './telegram/telegram.module';
 import { AuthModule } from './auth/auth.module';
 import { ExamsModule } from './exams/exams.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
@@ -59,6 +65,15 @@ import { StudentsModule } from './students/students.module';
         ],
       }),
     }),
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        const url = new URL(config.get('REDIS_URL', 'redis://localhost:6379'));
+        return {
+          connection: { host: url.hostname, port: Number(url.port || 6379) },
+        };
+      },
+    }),
     PrismaModule,
     RbacModule,
     AuditModule,
@@ -76,6 +91,11 @@ import { StudentsModule } from './students/students.module';
     AdmissionsModule,
     DocumentsModule,
     ReportsModule,
+    NotificationsModule,
+    AnnouncementsModule,
+    ForumModule,
+    ChatModule,
+    TelegramModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

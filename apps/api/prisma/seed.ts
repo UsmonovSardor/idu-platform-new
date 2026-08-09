@@ -57,6 +57,10 @@ const ROLE_POLICIES: Record<Role, Array<{ action: Action; subject: Subject }>> =
     { action: 'read', subject: 'Course' },
     { action: 'read', subject: 'Schedule' },
     { action: 'read', subject: 'Student' },
+    { action: 'read', subject: 'Forum' },
+    { action: 'create', subject: 'Forum' },
+    { action: 'read', subject: 'Chat' },
+    { action: 'create', subject: 'Chat' },
   ],
   STUDENT: [
     { action: 'read', subject: 'Grade' },
@@ -67,6 +71,10 @@ const ROLE_POLICIES: Record<Role, Array<{ action: Action; subject: Subject }>> =
     { action: 'read', subject: 'Payment' },
     { action: 'read', subject: 'Document' },
     { action: 'read', subject: 'Announcement' },
+    { action: 'read', subject: 'Forum' },
+    { action: 'create', subject: 'Forum' },
+    { action: 'read', subject: 'Chat' },
+    { action: 'create', subject: 'Chat' },
   ],
   PARENT: [
     { action: 'read', subject: 'Grade' },

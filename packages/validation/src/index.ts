@@ -8,3 +8,4 @@ export * from './assignment';
 export * from './exams';
 export * from './payments';
 export * from './admissions';
+export * from './announcements';
