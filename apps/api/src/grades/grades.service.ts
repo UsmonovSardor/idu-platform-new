@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { computeGrade, computeWeightedGpa, PASSING_SCORE } from '@idu/types';
 import type { GradeInputDto } from '@idu/validation';
 import { AuditService } from '../audit/audit.service';
+import { GamificationService } from '../gamification/gamification.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 interface ActorCtx {
@@ -14,6 +15,7 @@ export class GradesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly gamification: GamificationService,
   ) {}
 
   /** Baho kiritish/yangilash — total/letter/gpa avtomatik, audit + GPA qayta hisob. */
@@ -60,6 +62,16 @@ export class GradesService {
     });
 
     const gpa = await this.recomputeStudentGpa(dto.studentId);
+
+    // Gamifikatsiya: baho uchun XP (o'zlashtirishga mutanosib)
+    const student = await this.prisma.student.findUnique({
+      where: { id: dto.studentId },
+      select: { userId: true },
+    });
+    if (student) {
+      void this.gamification.award(student.userId, Math.round(result.total / 10), 'GRADE');
+    }
+
     return { grade, studentGpa: gpa };
   }
 

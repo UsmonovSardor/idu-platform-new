@@ -754,6 +754,46 @@ model Setting {
   @@map("settings")
 }
 
+// ── Gamification (§7.13) ────────────────────────────────────────────────────
+
+model GameProfile {
+  userId        String     @id
+  xp            Int        @default(0)
+  level         Int        @default(1)
+  streakDays    Int        @default(0)
+  longestStreak Int        @default(0)
+  lastActiveOn  DateTime?
+  badges        UserBadge[]
+
+  updatedAt DateTime @updatedAt
+
+  @@index([xp])
+  @@map("game_profiles")
+}
+
+model Badge {
+  id          String      @id @default(uuid())
+  code        String      @unique
+  name        String
+  description String?
+  icon        String?
+  threshold   Int? // XP chegarasi (avtomatik beriladi); null = qo'lda
+  users       UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  userId    String
+  profile   GameProfile @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  badgeId   String
+  badge     Badge       @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  awardedAt DateTime    @default(now())
+
+  @@id([userId, badgeId])
+  @@map("user_badges")
+}
+
 model FeatureFlag {
   key         String   @id
   enabled     Boolean  @default(false)

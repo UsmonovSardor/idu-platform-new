@@ -3,6 +3,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { ConfigService } from '@nestjs/config';
 import type { AttendanceStatus } from '@idu/types';
 import type { BulkAttendanceDto, MarkAttendanceDto } from '@idu/validation';
+import { GamificationService } from '../gamification/gamification.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 /** Sana faqat kun aniqligida (vaqtsiz) — kunlik unikal davomat uchun. */
@@ -15,6 +16,7 @@ export class AttendanceService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly gamification: GamificationService,
   ) {}
 
   // ── QR imzolash/tekshirish (stateless, qisqa muddatli) ──
@@ -82,6 +84,7 @@ export class AttendanceService {
       create: { studentId: student.id, courseId, date, status: 'PRESENT', createdBy: userId },
       update: { status: 'PRESENT' },
     });
+    void this.gamification.award(userId, 5, 'ATTENDANCE_QR'); // davomat uchun XP
     return { success: true, status: 'PRESENT' as AttendanceStatus };
   }
 

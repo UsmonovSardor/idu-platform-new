@@ -324,11 +324,24 @@ async function seedDemo() {
   console.log(`   Demo: course ${course.code}, student ${student.studentNumber} enrolled`);
 }
 
+async function seedBadges() {
+  const badges = [
+    { code: 'STARTER', name: 'Boshlovchi', icon: '🌱', threshold: 10 },
+    { code: 'BRONZE', name: 'Bronza', icon: '🥉', threshold: 100 },
+    { code: 'SILVER', name: 'Kumush', icon: '🥈', threshold: 500 },
+    { code: 'GOLD', name: 'Oltin', icon: '🥇', threshold: 1000 },
+  ];
+  for (const b of badges) {
+    await prisma.badge.upsert({ where: { code: b.code }, create: b, update: b });
+  }
+}
+
 async function main() {
   console.log('🌱 Seeding...');
   await seedPermissions();
   await seedRoles();
   await seedAdmin();
+  await seedBadges();
   await seedDemo();
   console.log('✅ Seed tugadi. Kirish: admin / Admin123!');
 }

@@ -6,6 +6,8 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { AcademicsModule } from './academics/academics.module';
 import { AdmissionsModule } from './admissions/admissions.module';
+import { AiModule } from './ai/ai.module';
+import { GamificationModule } from './gamification/gamification.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { AssignmentsModule } from './assignments/assignments.module';
 import { AttendanceModule } from './attendance/attendance.module';
@@ -78,6 +80,7 @@ import { StudentsModule } from './students/students.module';
     RbacModule,
     AuditModule,
     StorageModule,
+    GamificationModule,
     AuthModule,
     HealthModule,
     AcademicsModule,
@@ -96,6 +99,7 @@ import { StudentsModule } from './students/students.module';
     ForumModule,
     ChatModule,
     TelegramModule,
+    AiModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

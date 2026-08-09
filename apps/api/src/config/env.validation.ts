@@ -33,6 +33,8 @@ export const envSchema = z.object({
   THROTTLE_LIMIT: z.coerce.number().default(100),
 
   TELEGRAM_BOT_TOKEN: z.string().optional(),
+  ANTHROPIC_API_KEY: z.string().optional(), // AI modullari (ixtiyoriy, §7.14)
+  AI_MODEL: z.string().default('claude-opus-5'),
   SENTRY_DSN: z.string().optional(),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
 });
