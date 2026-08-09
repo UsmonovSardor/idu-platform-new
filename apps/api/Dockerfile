@@ -33,5 +33,5 @@ COPY --from=build /app/apps/api/package.json ./apps/api/
 COPY --from=build /app/apps/api/prisma ./apps/api/prisma
 WORKDIR /app/apps/api
 EXPOSE 4000
-# Har deploy'da migratsiyalarni qo'llaymiz (idempotent, Prisma advisory-lock) so'ng ilova
-CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node dist/main.js"]
+# Migratsiya (idempotent) → RUN_SEED=true bo'lsa seed (idempotent) → ilova
+CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && { [ \"$RUN_SEED\" = 'true' ] && node_modules/.bin/tsx prisma/seed.ts || true; } && node dist/main.js"]
