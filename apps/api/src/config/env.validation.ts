@@ -10,6 +10,19 @@ export const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string().default('redis://localhost:6379'),
 
+  S3_ENDPOINT: z.string().default('http://localhost:9000'),
+  S3_REGION: z.string().default('us-east-1'),
+  S3_ACCESS_KEY: z.string().default('idu_minio'),
+  S3_SECRET_KEY: z.string().default('idu_minio_password'),
+  S3_BUCKET: z.string().default('idu-uploads'),
+
+  APP_BASE_URL: z.string().default('http://localhost:4000'),
+  PAYME_MERCHANT_ID: z.string().optional(),
+  PAYME_KEY: z.string().optional(),
+  CLICK_MERCHANT_ID: z.string().optional(),
+  CLICK_SERVICE_ID: z.string().optional(),
+  CLICK_SECRET: z.string().optional(),
+
   JWT_ACCESS_SECRET: z.string().min(16),
   JWT_REFRESH_SECRET: z.string().min(16),
   JWT_ACCESS_TTL: z.string().default('15m'),

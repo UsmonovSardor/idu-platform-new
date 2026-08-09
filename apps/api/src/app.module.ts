@@ -4,9 +4,14 @@ import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { AcademicsModule } from './academics/academics.module';
+import { AdmissionsModule } from './admissions/admissions.module';
 import { AssignmentsModule } from './assignments/assignments.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { AuditModule } from './audit/audit.module';
+import { DocumentsModule } from './documents/documents.module';
+import { PaymentsModule } from './payments/payments.module';
+import { ReportsModule } from './reports/reports.module';
+import { StorageModule } from './storage/storage.module';
 import { AuthModule } from './auth/auth.module';
 import { ExamsModule } from './exams/exams.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
@@ -57,6 +62,7 @@ import { StudentsModule } from './students/students.module';
     PrismaModule,
     RbacModule,
     AuditModule,
+    StorageModule,
     AuthModule,
     HealthModule,
     AcademicsModule,
@@ -66,6 +72,10 @@ import { StudentsModule } from './students/students.module';
     AttendanceModule,
     AssignmentsModule,
     ExamsModule,
+    PaymentsModule,
+    AdmissionsModule,
+    DocumentsModule,
+    ReportsModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

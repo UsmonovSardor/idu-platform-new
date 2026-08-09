@@ -300,6 +300,19 @@ async function seedDemo() {
     console.log(`   Demo exam: ${exam.title} (2 savol)`);
   }
 
+  // Namunaviy kontrakt to'lovi
+  const hasPayment = await prisma.payment.findFirst({ where: { studentId: student.id } });
+  if (!hasPayment) {
+    await prisma.payment.create({
+      data: {
+        studentId: student.id,
+        amount: 12_000_000,
+        gateway: 'PAYME',
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      },
+    });
+  }
+
   console.log(`   Demo: course ${course.code}, student ${student.studentNumber} enrolled`);
 }
 
