@@ -8,6 +8,7 @@ FROM base AS deps
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml tsconfig.base.json ./
 COPY packages/config/package.json ./packages/config/
 COPY packages/types/package.json ./packages/types/
+COPY packages/validation/package.json ./packages/validation/
 COPY packages/api-client/package.json ./packages/api-client/
 COPY packages/design-tokens/package.json ./packages/design-tokens/
 COPY apps/web/package.json ./apps/web/
