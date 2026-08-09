@@ -30,4 +30,5 @@ COPY --from=build /app/apps/api/package.json ./apps/api/
 COPY --from=build /app/apps/api/prisma ./apps/api/prisma
 WORKDIR /app/apps/api
 EXPOSE 4000
-CMD ["node", "dist/main.js"]
+# Har deploy'da migratsiyalarni qo'llaymiz (idempotent, Prisma advisory-lock) so'ng ilova
+CMD ["sh", "-c", "../../node_modules/.bin/prisma migrate deploy && node dist/main.js"]
