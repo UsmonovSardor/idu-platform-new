@@ -1,6 +1,8 @@
 'use client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { Toaster } from 'sonner';
+import { PwaRegister } from '@/components/pwa-register';
 import { api } from './api';
 import { useAuth } from './auth-store';
 import { I18nProvider } from './i18n';
@@ -46,7 +48,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={client}>
       <I18nProvider>
         <ThemeInit />
+        <PwaRegister />
         <SessionBootstrap>{children}</SessionBootstrap>
+        <Toaster
+          position="top-right"
+          richColors
+          closeButton
+          toastOptions={{ style: { fontFamily: 'var(--font-sans)' } }}
+        />
       </I18nProvider>
     </QueryClientProvider>
   );
