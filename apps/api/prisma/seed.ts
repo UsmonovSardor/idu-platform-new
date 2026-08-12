@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import {
   ACTIONS,
+  MFA_REQUIRED_ROLES,
   ROLE_LABELS,
   ROLES,
   SUBJECTS,
@@ -324,6 +325,77 @@ async function seedDemo() {
   console.log(`   Demo: course ${course.code}, student ${student.studentNumber} enrolled`);
 }
 
+/**
+ * Qolgan rollar uchun demo akkauntlar (login sinovi uchun).
+ * DEANERY va RECTOR — 2FA majburiy (MFA_REQUIRED_ROLES), dev secret bilan.
+ */
+const DEMO_ACCOUNTS: Array<{
+  login: string;
+  password: string;
+  role: Role;
+  fullName: string;
+  email: string;
+}> = [
+  { login: 'curator', password: 'Curator123!', role: 'CURATOR', fullName: 'Nazarova Dilnoza', email: 'curator@idu.uz' },
+  { login: 'depthead', password: 'DeptHead123!', role: 'DEPARTMENT_HEAD', fullName: 'Rahimov Jasur', email: 'depthead@idu.uz' },
+  { login: 'deanery', password: 'Deanery123!', role: 'DEANERY', fullName: 'Yusupova Kamola', email: 'deanery@idu.uz' },
+  { login: 'rector', password: 'Rector123!', role: 'RECTOR', fullName: 'Abdullayev Bekzod', email: 'rector@idu.uz' },
+  { login: 'parent', password: 'Parent123!', role: 'PARENT', fullName: 'Karimov Akmal', email: 'parent@idu.uz' },
+  { login: 'applicant', password: 'Applicant123!', role: 'APPLICANT', fullName: 'Tosheva Nigora', email: 'applicant@idu.uz' },
+];
+
+async function seedRoleAccounts() {
+  // Admin bilan bir xil dev 2FA secret — bitta authenticator hammasiga ishlaydi.
+  const devSecret = 'JBSWY3DPEHPK3PXP';
+
+  for (const acc of DEMO_ACCOUNTS) {
+    const role = await prisma.role.findUniqueOrThrow({ where: { name: acc.role } });
+    const needs2fa = MFA_REQUIRED_ROLES.includes(acc.role);
+    await prisma.user.upsert({
+      where: { login: acc.login },
+      create: {
+        fullName: acc.fullName,
+        login: acc.login,
+        email: acc.email,
+        passwordHash: await bcrypt.hash(acc.password, 12),
+        roleId: role.id,
+        status: 'ACTIVE',
+        emailVerified: true,
+        twoFactorEnabled: needs2fa,
+        twoFactorSecret: needs2fa ? devSecret : null,
+      },
+      update: {
+        roleId: role.id,
+        status: 'ACTIVE',
+        twoFactorEnabled: needs2fa,
+        twoFactorSecret: needs2fa ? devSecret : null,
+      },
+    });
+  }
+
+  // Kuratorni CS-21 guruhga biriktiramiz (realizm uchun)
+  const curator = await prisma.user.findUnique({ where: { login: 'curator' } });
+  const group = await prisma.group.findFirst({ where: { name: 'CS-21' } });
+  if (curator && group && group.curatorId !== curator.id) {
+    await prisma.group.update({ where: { id: group.id }, data: { curatorId: curator.id } });
+  }
+
+  // Demo abituriyent arizasi — dekanat ko'rib chiqishi uchun
+  const hasAdmission = await prisma.admission.findFirst({ where: { email: 'applicant@idu.uz' } });
+  if (!hasAdmission) {
+    await prisma.admission.create({
+      data: {
+        fullName: 'Tosheva Nigora',
+        email: 'applicant@idu.uz',
+        phone: '+998901234567',
+        status: 'SUBMITTED',
+      },
+    });
+  }
+
+  console.log(`   Demo rol akkauntlari: ${DEMO_ACCOUNTS.map((a) => a.login).join(', ')}`);
+}
+
 async function seedBadges() {
   const badges = [
     { code: 'STARTER', name: 'Boshlovchi', icon: '🌱', threshold: 10 },
@@ -343,7 +415,17 @@ async function main() {
   await seedAdmin();
   await seedBadges();
   await seedDemo();
-  console.log('✅ Seed tugadi. Kirish: admin / Admin123!');
+  await seedRoleAccounts();
+  console.log('✅ Seed tugadi. Demo kirish:');
+  console.log('   admin / Admin123!  (2FA)');
+  console.log('   teacher / Teacher123!');
+  console.log('   student / Student123!');
+  console.log('   curator / Curator123!');
+  console.log('   depthead / DeptHead123!');
+  console.log('   deanery / Deanery123!  (2FA)');
+  console.log('   rector / Rector123!  (2FA)');
+  console.log('   parent / Parent123!');
+  console.log('   applicant / Applicant123!');
 }
 
 main()
