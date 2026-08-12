@@ -59,3 +59,4 @@ apps/mobile/android/
 
 # Claude Code local
 .claude/
+.brand-research/

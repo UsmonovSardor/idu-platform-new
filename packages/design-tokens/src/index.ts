@@ -3,45 +3,46 @@
  * Web (CSS vars) va mobil (RN) o'rtasida ulashiladi. Yagona haqiqat manbai.
  */
 
-/** Brend ranglari (HSL komponentlari — CSS var uchun ham qulay). */
+/** Brend ranglari — idu.uz'dan olingan (royal blue #234991 + qizil #E2092F). */
 export const palette = {
-  // IDU Blue — ishonchli indigo-kobalt
+  // IDU Blue — logotipdagi royal-navy ko'k (asosiy brend)
   brand: {
-    50: '#eef1ff',
-    100: '#e0e5ff',
-    200: '#c6cfff',
-    300: '#a3b0ff',
-    400: '#7c86fb',
-    500: '#5b5cf0',
-    600: '#4a41e0', // primary
-    700: '#3e33c4',
-    800: '#332c9e',
-    900: '#2d2a7d',
+    50: '#eef2fb',
+    100: '#dae3f5',
+    200: '#b4c5ea',
+    300: '#8aa3db',
+    400: '#5878c4',
+    500: '#3557a8',
+    600: '#234991', // primary — IDU logo blue
+    700: '#1d3c78',
+    800: '#183160',
+    900: '#142a52',
+    950: '#0e1b34',
   },
-  // Warm gold — prestij + gamifikatsiya urg'usi
-  gold: {
-    400: '#e6b45c',
-    500: '#d99b3e',
-    600: '#c07e28',
+  // IDU Red — logotipdagi urg'u (nuqta, CTA)
+  red: {
+    400: '#ff4d67',
+    500: '#e2092f', // accent — IDU logo red
+    600: '#c40828',
   },
-  // Cool slate neutrals
+  // Cool slate neutrals (navy tomon egilgan)
   slate: {
     0: '#ffffff',
-    50: '#f7f8fa',
-    100: '#eef0f4',
-    200: '#e2e5ec',
-    300: '#cdd2dd',
-    400: '#9aa2b4',
-    500: '#6b7385',
-    600: '#4b5262',
-    700: '#353b49',
-    800: '#20242e',
-    900: '#12141b',
-    950: '#0b0d12',
+    50: '#f5f7fa',
+    100: '#eef1f6',
+    200: '#e1e6ee',
+    300: '#cbd2df',
+    400: '#98a2b6',
+    500: '#656f83',
+    600: '#454e60',
+    700: '#2f3646',
+    800: '#1a2133',
+    900: '#0e1627',
+    950: '#060b18',
   },
   success: '#2f9e6f',
   warning: '#d99b3e',
-  danger: '#e0554f',
+  danger: '#e2092f',
 } as const;
 
 export const radius = {

@@ -40,28 +40,34 @@ export default function LoginPage() {
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-2">
-      {/* Brand panel */}
-      <div className="relative hidden overflow-hidden bg-primary p-12 text-primary-fg lg:flex lg:flex-col lg:justify-between">
+      {/* Brand panel — IDU navy hero */}
+      <div
+        className="relative hidden overflow-hidden p-12 text-white lg:flex lg:flex-col lg:justify-between"
+        style={{ background: 'linear-gradient(155deg, #0e1b34 0%, #234991 58%, #1d3c78 100%)' }}
+      >
         <div
-          className="pointer-events-none absolute inset-0 opacity-30"
+          className="pointer-events-none absolute inset-0"
           style={{
             background:
-              'radial-gradient(50% 40% at 80% 10%, rgba(255,255,255,0.35), transparent 60%), radial-gradient(40% 35% at 0% 100%, rgba(0,0,0,0.35), transparent 60%)',
+              'radial-gradient(45% 35% at 85% 8%, rgba(255,255,255,0.14), transparent 60%), radial-gradient(50% 45% at 0% 100%, rgba(226,9,47,0.28), transparent 60%)',
           }}
         />
         <div className="relative">
-          <Logo className="[&_*]:!text-primary-fg" />
+          <Logo className="[&_.text-primary]:!text-white [&_.text-muted]:!text-white/60 [&_.text-fg]:!text-white [&_.border-border]:!border-white/25" />
         </div>
         <div className="relative max-w-md">
-          <h1 className="text-4xl font-extrabold leading-[1.1] tracking-tight">
-            Universitetni bitta oynada boshqaring.
+          <span className="inline-flex items-center rounded-full bg-accent px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-white">
+            Xalqaro Raqamli Universitet
+          </span>
+          <h1 className="mt-5 text-4xl font-extrabold uppercase leading-[1.05] tracking-tight">
+            Bugun o&apos;rgan —<br />ertangi kunni yarat.
           </h1>
-          <p className="mt-4 text-primary-fg/80">
-            Baholash, jadval, imtihon, to&apos;lov va real vaqtli aloqa — hammasi zamonaviy, xavfsiz
-            platformada.
+          <p className="mt-4 text-white/75">
+            Baholash, jadval, imtihon, to&apos;lov va real vaqtli aloqa — hammasi yagona, zamonaviy va
+            xavfsiz IDU platformasida.
           </p>
         </div>
-        <div className="relative flex items-center gap-2 text-sm text-primary-fg/70">
+        <div className="relative flex items-center gap-2 text-sm text-white/65">
           <ShieldCheck className="h-4 w-4" /> 2FA · RBAC · shifrlangan sessiyalar
         </div>
       </div>

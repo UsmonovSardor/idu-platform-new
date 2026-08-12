@@ -16,6 +16,7 @@ const config: Config = {
         primary: 'var(--primary)',
         'primary-fg': 'var(--primary-fg)',
         accent: 'var(--accent)',
+        'accent-fg': 'var(--accent-fg)',
         success: 'var(--success)',
         danger: 'var(--danger)',
         warning: 'var(--warning)',

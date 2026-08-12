@@ -2,38 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+/* IDU brand — royal blue (#234991) identity, red (#E2092F) accent, navy depth. */
 :root {
-  --bg: #f6f7f9;
-  --fg: #12141b;
+  --bg: #f4f6f9;
+  --fg: #010714;
   --card: #ffffff;
-  --card-fg: #12141b;
-  --muted: #6b7385;
-  --muted-bg: #eef0f4;
-  --border: #e4e7ee;
-  --primary: #4a41e0;
+  --card-fg: #010714;
+  --muted: #656f83;
+  --muted-bg: #eef1f6;
+  --border: #e1e6ee;
+  --primary: #234991;
   --primary-fg: #ffffff;
-  --accent: #c07e28;
+  --accent: #e2092f;
+  --accent-fg: #ffffff;
   --success: #2f9e6f;
-  --danger: #e0554f;
+  --danger: #e2092f;
   --warning: #d99b3e;
-  --ring: #7c86fb;
+  --ring: #5878c4;
 }
 
 .dark {
-  --bg: #0b0d12;
-  --fg: #edeff4;
-  --card: #14161d;
-  --card-fg: #edeff4;
-  --muted: #9aa2b4;
-  --muted-bg: #1c1f28;
-  --border: #232733;
-  --primary: #8b90fb;
-  --primary-fg: #0b0d12;
-  --accent: #e6b45c;
+  --bg: #060b18;
+  --fg: #eef1f8;
+  --card: #0e1627;
+  --card-fg: #eef1f8;
+  --muted: #8a94ab;
+  --muted-bg: #16203a;
+  --border: #1f2b46;
+  --primary: #5c86d6;
+  --primary-fg: #060b18;
+  --accent: #ff2f4d;
+  --accent-fg: #ffffff;
   --success: #46b487;
-  --danger: #ef6b65;
+  --danger: #ff5a5a;
   --warning: #e6b45c;
-  --ring: #6b6cf0;
+  --ring: #3557a8;
 }
 
 * {

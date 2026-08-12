@@ -16,14 +16,14 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'IDU Platform',
-  description: 'Universitet boshqaruv tizimi',
+  title: 'IDU Platform — International Digital University',
+  description: 'International Digital University boshqaruv tizimi',
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f6f7f9' },
-    { media: '(prefers-color-scheme: dark)', color: '#0b0d12' },
+    { media: '(prefers-color-scheme: light)', color: '#f4f6f9' },
+    { media: '(prefers-color-scheme: dark)', color: '#060b18' },
   ],
 };
 
